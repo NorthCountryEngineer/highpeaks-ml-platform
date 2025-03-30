@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: highpeaks-ml-platform
+  labels:
+    app: highpeaks-ml
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: highpeaks-ml
+  template:
+    metadata:
+      labels:
+        app: highpeaks-ml
+    spec:
+      containers:
+      - name: ml-platform
+        image: highpeaks-ml-platform:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000

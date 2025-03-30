@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: highpeaks-ml-platform
+spec:
+  type: ClusterIP
+  selector:
+    app: highpeaks-ml
+  ports:
+    - port: 80
+      targetPort: 5000
