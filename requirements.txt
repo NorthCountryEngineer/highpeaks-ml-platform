@@ -1,2 +1,8 @@
-flask==2.2.3
-werkzeug==2.2.2
+flask
+requests
+pyyaml
+numpy
+boto3
+psycopg2-binary
+tensorflow
+mlflow

@@ -1,0 +1,8 @@
+# Namespace definition for isolating ML platform resources
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: highpeaks-ml
+  labels:
+    name: highpeaks-ml

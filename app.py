@@ -1,17 +1,18 @@
 from flask import Flask, jsonify
+import mlflow.pyfunc
+import numpy as np
 
 app = Flask(__name__)
 
-@app.route('/health')
-def health():
-    return jsonify(status='ok')
+MODEL_URI = "models:/mnist-model/latest"
+model = mlflow.pyfunc.load_model(MODEL_URI)
 
-@app.route('/predict')
+@app.route('/predict', methods=['GET'])
 def predict():
-    # Stub prediction logic (in a real app, this might call a model inference)
-    result = {"prediction": 42}
-    return jsonify(result)
+    sample_input = np.random.rand(1, 28, 28).astype(np.float32)
+    prediction = model.predict(sample_input)
+    predicted_class = int(np.argmax(prediction))
+    return jsonify({"predicted_class": predicted_class})
 
 if __name__ == '__main__':
-    # Run the Flask app (accessible on all interfaces)
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

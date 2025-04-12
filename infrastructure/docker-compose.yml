@@ -1,0 +1,31 @@
+version: "3.8"
+services:
+  minio:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: mlplatformdb
+      POSTGRES_USER: mluser
+      POSTGRES_PASSWORD: mlpassword
+    ports:
+      - "5432:5432"
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    environment:
+      BACKEND_STORE_URI: postgresql://mluser:mlpassword@postgres/mlplatformdb
+      DEFAULT_ARTIFACT_ROOT: s3://ml-platform
+      AWS_ACCESS_KEY_ID: minioadmin
+      AWS_SECRET_ACCESS_KEY: minioadmin
+      MLFLOW_S3_ENDPOINT_URL: http://minio:9000
+    ports:
+      - "5001:5000"

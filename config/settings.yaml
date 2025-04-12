@@ -1,0 +1,27 @@
+# Application settings for High Peaks ML Platform service.
+
+service:
+  name: highpeaks-ml-platform
+  version: 0.1.0
+  port: 5000
+  debug: true
+
+data:
+  storage:
+    minio:
+      endpoint: http://localhost:9000
+      bucket: ml-platform
+      access_key: minioadmin
+      secret_key: minioadmin
+
+  database:
+    postgres:
+      host: localhost
+      port: 5432
+      dbname: mlplatformdb
+      user: mluser
+      password: mlpassword
+
+mlflow:
+  tracking_uri: http://localhost:5001
+  experiment_name: default
