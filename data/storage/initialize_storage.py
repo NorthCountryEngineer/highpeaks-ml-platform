@@ -1,5 +1,6 @@
 # Script to initialize MinIO bucket and PostgreSQL tables
 import boto3
+import botocore
 import psycopg2
 import yaml
 
@@ -14,7 +15,10 @@ s3 = boto3.resource('s3',
                     aws_secret_access_key=minio_cfg['secret_key'])
 
 bucket_name = minio_cfg['bucket']
-if not s3.Bucket(bucket_name) in s3.buckets.all():
+try:
+    s3.meta.client.head_bucket(Bucket=bucket_name)
+    print(f"Bucket {bucket_name} already exists.")
+except botocore.exceptions.ClientError:
     s3.create_bucket(Bucket=bucket_name)
     print(f"Created bucket: {bucket_name}")
 
