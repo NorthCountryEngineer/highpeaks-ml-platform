@@ -47,14 +47,24 @@ install_kubectl() {
   echo "🛠️ Installing kubectl..."
   sudo apt-get update
   sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
-  sudo mkdir -p -m 755 /etc/apt/keyrings
-  curl -fsSL https://dl.k8s.io/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
-  sudo chmod 644 /etc/apt/keyrings/kubernetes-apt-keyring.gpg 
-  echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+  # fetch Google APT signing key into the recommended location
+  sudo mkdir -p /usr/share/keyrings
+  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+    | sudo tee /usr/share/keyrings/kubernetes-archive-keyring.gpg >/dev/null
+
+  # add the official k8s repo
+  echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] \
+    https://apt.kubernetes.io/ kubernetes-xenial main" \
+    | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+  # update & install
   sudo apt-get update
   sudo apt-get install -y kubectl
+
   echo "✔️ kubectl installed: $(kubectl version --client --short)"
 }
+
 
 install_kind() {
   if check_cmd kind; then
