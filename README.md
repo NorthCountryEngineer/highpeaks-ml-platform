@@ -70,24 +70,27 @@ highpeaks-ml-platform/
 
 ### Run Local Stack with Docker Compose (optional)
 
-Alternatively, you can quickly launch the full local stack (Flask API, MinIO, PostgreSQL, MLflow) using Docker Compose:
+
+Alternatively, you can quickly launch the full local stack (Flask API, MinIO, PostgreSQL and MLflow) using Docker Compose.
+
+Start the stack:
 
 ```bash
-docker compose -f infrastructure/docker-compose.yml up
+docker compose -f infrastructure/docker-compose.yml up -d
+```
 
-This will launch:
+The following services will be available:
 
-   - ** Flask service on port 5000 (http://localhost:5000)
+- **Flask API:** <http://localhost:5000>
+- **MLflow tracking server:** <http://localhost:5001>
+- **MinIO console:** <http://localhost:9001> (S3 API on port 9000)
+- **PostgreSQL:** `localhost:5432`
 
-   - ** MinIO on ports 9000 (API) and 9001 (UI) (http://localhost:9001)
+Stop the stack with:
 
-   - ** PostgreSQL database on port 5432
-
-   - ** MLflow tracking server on port 5001 (http://localhost:5001)
-
-Stop the stack using:
-
-```docker compose -f infrastructure/docker-compose.yml down```
+```bash
+docker compose -f infrastructure/docker-compose.yml down
+```
 
 ## Kubernetes Deployment
 
@@ -99,24 +102,30 @@ Kubernetes manifests located in `infrastructure/k8s/`:
 - **MLflow Tracking Server (`mlflow.yaml`)**: Deployment for MLflow experiment tracking.
 - **Storage Components (`storage.yaml`)**: Manifests for deploying MinIO and PostgreSQL for data storage.
 
+
 ### Deploy Steps:
 
-1. **Ensure Docker image is built and loaded (if using Kind):**
-    ```bash
-    kind load docker-image highpeaks-ml-platform:latest
-    ```
+1. **Build and push the Docker image**
+   ```bash
+   docker build -t <registry>/highpeaks-ml-platform:latest .
+   docker push <registry>/highpeaks-ml-platform:latest
+   ```
+   If using a kind cluster, load the local image instead:
+   ```bash
+   kind load docker-image <registry>/highpeaks-ml-platform:latest
+   ```
 
-2. **Apply Kubernetes manifests:**
-    ```bash
-    kubectl apply -f infrastructure/k8s/namespace.yaml
-    kubectl apply -f infrastructure/k8s/storage.yaml
-    kubectl apply -f infrastructure/k8s/mlflow.yaml
-    kubectl apply -f infrastructure/k8s/deployment.yaml
-    kubectl apply -f infrastructure/k8s/service.yaml
-    ```
+2. **Apply Kubernetes manifests**
+   ```bash
+   kubectl apply -f infrastructure/k8s/
+   ```
 
-The ML service will now be available internally within the Kubernetes cluster, and MLflow can track experiments.
-
+3. **Verify the services**
+   ```bash
+   kubectl get pods -n highpeaks-ml
+   kubectl get services -n highpeaks-ml
+   ```
+The ML service and MLflow should now be running within the cluster.
 ## CI/CD Workflow
 
 GitHub Actions (`.github/workflows/ci.yml`) executes on push or PR to:
