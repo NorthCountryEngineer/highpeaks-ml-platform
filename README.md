@@ -114,6 +114,23 @@ This will launch:
 Stop the stack using:
 
 ```docker compose -f infrastructure/docker-compose.yml down```
+
+## Quick Deployment Script
+
+The repository provides a convenience script `deploy.sh` that sets up the ML platform either locally with Docker Compose or on a Kubernetes cluster using Kind. Run the script without arguments to be prompted for the deployment type:
+
+```bash
+./deploy.sh
+```
+
+Specify `local` or `k8s` to skip the prompt:
+
+```bash
+./deploy.sh local  # start Docker Compose stack
+./deploy.sh k8s    # create Kind cluster and apply manifests
+```
+
+The script attempts to install Docker, kubectl and Kind if they are missing on the host machine (using `apt-get` or Homebrew when available).
 ## Data Pipeline
 
 Follow the sample workflow to ingest and process data and train a model:
