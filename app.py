@@ -1,10 +1,19 @@
+import os
 from flask import Flask, jsonify
+import yaml
+import mlflow
 import mlflow.pyfunc
 import numpy as np
 
 app = Flask(__name__)
 
-MODEL_URI = "models:/mnist-model/latest"
+config_path = os.environ.get("SERVICE_CONFIG_PATH", "config/settings.yaml")
+with open(config_path, "r") as f:
+    config = yaml.safe_load(f)
+
+mlflow.set_tracking_uri(config["mlflow"]["tracking_uri"])
+
+MODEL_URI = config["mlflow"].get("model_uri", "models:/mnist-model/latest")
 model = mlflow.pyfunc.load_model(MODEL_URI)
 
 @app.route('/predict', methods=['GET'])

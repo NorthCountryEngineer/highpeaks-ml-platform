@@ -51,7 +51,11 @@ highpeaks-ml-platform/
     ```
     Installs required libraries (Flask, ML tools, data processing libraries, etc.).
 
-3. **Run the Flask service locally:**
+3. **Configure MLflow settings:**
+    Edit `config/settings.yaml` to set the `tracking_uri` and `model_uri` under the `mlflow` section.
+    You can also point the application at a different configuration file by setting the `SERVICE_CONFIG_PATH` environment variable.
+
+4. **Run the Flask service locally:**
     ```bash
     python app.py
     ```
@@ -61,7 +65,7 @@ highpeaks-ml-platform/
     ```
     You should receive a JSON response indicating a sample prediction.
 
-4. **Build and run Docker container:**
+5. **Build and run Docker container:**
     ```bash
     docker build -t highpeaks-ml-platform:latest .
     docker run -p 5000:5000 highpeaks-ml-platform:latest

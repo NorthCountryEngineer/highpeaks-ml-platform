@@ -25,3 +25,4 @@ data:
 mlflow:
   tracking_uri: http://localhost:5001
   experiment_name: default
+  model_uri: models:/mnist-model/latest
