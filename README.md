@@ -110,6 +110,14 @@ This will launch:
 Stop the stack using:
 
 ```docker compose -f infrastructure/docker-compose.yml down```
+## Data Pipeline
+
+Follow the sample workflow to ingest and process data and train a model:
+
+1. Run `python data/ingestion/sample_ingestion_pipeline.py` to download the MNIST dataset. This saves `mnist.npz` under `data/raw`.
+2. Run `python data/processing/process_mnist.py` to create normalized datasets. The output `mnist_processed.npz` is written to `data/processed`.
+3. Run `python ml/scripts/train_mnist_model.py` to train the model and log the run to MLflow. Artifacts are stored in your configured MLflow tracking location.
+
 
 ## Kubernetes Deployment
 
