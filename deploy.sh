@@ -50,12 +50,12 @@ install_kubectl() {
 
   # fetch Google APT signing key into the recommended location
   sudo mkdir -p /usr/share/keyrings
-  curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
-    | sudo tee /usr/share/keyrings/kubernetes-archive-keyring.gpg >/dev/null
+
+  curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
   # add the official k8s repo
-  echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] \
-    https://apt.kubernetes.io/ kubernetes-xenial main" \
+  echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" \
     | sudo tee /etc/apt/sources.list.d/kubernetes.list
 
   # update & install
