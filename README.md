@@ -35,6 +35,28 @@ highpeaks-ml-platform/
     └── workflows/
         └── ci.yml               # GitHub Actions workflow for CI/CD
 ```
+
+## Configuration Overview
+
+The application configuration resides in `config/settings.yaml`. Key sections
+include:
+
+* **`service`** – basic service metadata and runtime options such as `name`,
+  `version`, `port`, and a `debug` flag.
+* **`data.storage.minio`** – connection details for the object store used to
+  persist training data and models. This includes the service `endpoint`, the
+  target `bucket`, and access credentials.
+* **`data.database.postgres`** – parameters for the PostgreSQL instance holding
+  structured data. The block defines `host`, `port`, `dbname`, `user`, and
+  `password`.
+* **`mlflow`** – MLflow tracking server configuration with a `tracking_uri` and
+  `experiment_name`.
+
+By default the file is configured for local development, pointing at services
+started by the Docker Compose stack. For a production deployment, update these
+values to reference production endpoints and disable `debug`. Credentials should
+be provided via environment variables or a secrets manager rather than in the
+file.
 ## Development Setup
 
 **Prerequisites:** Python 3.x (3.10 recommended), pip, Docker, Docker Compose, Kubernetes (`kubectl`, optionally `kind`).
