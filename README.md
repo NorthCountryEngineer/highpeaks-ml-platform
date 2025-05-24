@@ -35,6 +35,28 @@ highpeaks-ml-platform/
     └── workflows/
         └── ci.yml               # GitHub Actions workflow for CI/CD
 ```
+
+## Configuration Overview
+
+The application configuration resides in `config/settings.yaml`. Key sections
+include:
+
+* **`service`** – basic service metadata and runtime options such as `name`,
+  `version`, `port`, and a `debug` flag.
+* **`data.storage.minio`** – connection details for the object store used to
+  persist training data and models. This includes the service `endpoint`, the
+  target `bucket`, and access credentials.
+* **`data.database.postgres`** – parameters for the PostgreSQL instance holding
+  structured data. The block defines `host`, `port`, `dbname`, `user`, and
+  `password`.
+* **`mlflow`** – MLflow tracking server configuration with a `tracking_uri` and
+  `experiment_name`.
+
+By default the file is configured for local development, pointing at services
+started by the Docker Compose stack. For a production deployment, update these
+values to reference production endpoints and disable `debug`. Credentials should
+be provided via environment variables or a secrets manager rather than in the
+file.
 ## Development Setup
 
 **Prerequisites:** Python 3.x (3.10 recommended), pip, Docker, Docker Compose, Kubernetes (`kubectl`, optionally `kind`).
@@ -70,7 +92,6 @@ highpeaks-ml-platform/
 
 ### Run Local Stack with Docker Compose (optional)
 
-
 Alternatively, you can quickly launch the full local stack (Flask API, MinIO, PostgreSQL and MLflow) using Docker Compose.
 
 Start the stack:
@@ -91,6 +112,14 @@ Stop the stack with:
 ```bash
 docker compose -f infrastructure/docker-compose.yml down
 ```
+
+## Data Pipeline
+
+Follow the sample workflow to ingest and process data and train a model:
+
+1. Run `python data/ingestion/sample_ingestion_pipeline.py` to download the MNIST dataset. This saves `mnist.npz` under `data/raw`.
+2. Run `python data/processing/process_mnist.py` to create normalized datasets. The output `mnist_processed.npz` is written to `data/processed`.
+3. Run `python ml/scripts/train_mnist_model.py` to train the model and log the run to MLflow. Artifacts are stored in your configured MLflow tracking location.
 
 ## Kubernetes Deployment
 

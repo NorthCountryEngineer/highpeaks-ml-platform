@@ -25,6 +25,11 @@ jobs:
           pip install flake8
           flake8 app.py
 
+      - name: Run unit tests
+        run: |
+          pip install pytest
+          pytest -q
+
       - name: Install kubectl
         run: |
           curl -sSLO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
@@ -32,7 +37,7 @@ jobs:
           sudo mv kubectl /usr/local/bin/kubectl
 
       - name: Validate Kubernetes manifests
-        run: kubectl apply --dry-run=client -f k8s/
+        run: kubectl apply --dry-run=client -f infrastructure/k8s/
 
       - name: Build Docker image (CI test)
         run: docker build -t highpeaks-ml-platform-ci:build .
