@@ -18,12 +18,16 @@ s3 = boto3.resource('s3',
                     aws_secret_access_key=minio_cfg['secret_key'])
 
 bucket_name = minio_cfg['bucket']
+
 try:
     s3.meta.client.head_bucket(Bucket=bucket_name)
     print(f"Bucket {bucket_name} already exists.")
 except botocore.exceptions.ClientError:
+
     s3.create_bucket(Bucket=bucket_name)
     print(f"Created bucket: {bucket_name}")
+else:
+    print(f"Bucket '{bucket_name}' already exists")
 
 # Setup PostgreSQL tables
 db_cfg = config['data']['database']['postgres']
