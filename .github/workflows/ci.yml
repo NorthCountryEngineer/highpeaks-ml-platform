@@ -30,14 +30,8 @@ jobs:
           pip install pytest
           pytest -q
 
-      - name: Install kubectl
-        run: |
-          curl -sSLO https://dl.k8s.io/release/v1.26.0/bin/linux/amd64/kubectl
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/kubectl
-
       - name: Validate Kubernetes manifests
-        run: kubectl apply --dry-run=client -f infrastructure/k8s/
+        run: python scripts/validate_k8s_manifests.py infrastructure/k8s/
 
       - name: Build Docker image (CI test)
         run: docker build -t highpeaks-ml-platform-ci:build .
