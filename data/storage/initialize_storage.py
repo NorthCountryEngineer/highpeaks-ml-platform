@@ -14,9 +14,13 @@ s3 = boto3.resource('s3',
                     aws_secret_access_key=minio_cfg['secret_key'])
 
 bucket_name = minio_cfg['bucket']
-if not s3.Bucket(bucket_name) in s3.buckets.all():
+# Check existing buckets by comparing names
+existing = any(b.name == bucket_name for b in s3.buckets.all())
+if not existing:
     s3.create_bucket(Bucket=bucket_name)
     print(f"Created bucket: {bucket_name}")
+else:
+    print(f"Bucket '{bucket_name}' already exists")
 
 # Setup PostgreSQL tables
 db_cfg = config['data']['database']['postgres']
