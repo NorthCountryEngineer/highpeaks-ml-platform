@@ -130,6 +130,15 @@ local_deploy() {
   echo "✅ Local docker-compose deployment complete"
 }
 
+docker_cleanup() {
+  set -x
+  echo "pruning containers"
+  docker container prune -f
+  # https://stackoverflow.com/a/42371013/
+  docker system prune -f
+  set +x
+}
+
 k8s_deploy() {
   install_docker
   install_kubectl
@@ -154,11 +163,8 @@ k8s_deploy() {
   unset TMPDIR
 
   # trying to clear "no space left on device" error
-  echo "🧹 Cleaning up old temp folders and pruning volumes"
-  TMPDIR="${DEPLOY_TMPDIR:-/tmp}"
-  rm -f "$TMPDIR/highpeaks-ml-platform.tar"
-  rm -f "$TMPDIR/.docker_temp_*" 2>/dev/null || true
-  docker system prune --volumes -f
+  echo "🧹 Running Docker cleanup tasks"
+  docker_cleanup
 
   echo "📥 Saving image to tarball in /tmp…"
   docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
