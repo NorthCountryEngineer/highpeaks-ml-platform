@@ -104,6 +104,10 @@ k8s_deploy() {
       --config infrastructure/k8s/kind-cluster.yaml
   fi
 
+  # ensure kubeconfig is set for the current user
+  echo "🔧 Exporting kubeconfig..."
+  kind export kubeconfig --name highpeaks-ml
+
   # force Kind to use /tmp as its scratch space
   unset TMPDIR
   
