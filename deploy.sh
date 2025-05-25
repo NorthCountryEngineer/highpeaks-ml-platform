@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Check if a command exists
+check_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
 # Minimal deployment script for High Peaks ML Platform
 
 # Usage: ./deploy.sh [local|k8s]
@@ -135,6 +140,28 @@ k8s_deploy() {
   echo "✅ Kubernetes deployment complete"
 }
 
+# Print access information for the selected mode
+print_endpoints() {
+  if [[ "$1" == "local" ]]; then
+    cat <<EOF
+📬 Endpoints:
+  - Flask API:       http://localhost:5000
+  - MLflow Tracking: http://localhost:5001
+  - MinIO Console:   http://localhost:9001
+EOF
+  else
+    cat <<EOF
+📬 Endpoints inside the cluster:
+  - Flask API service: highpeaks-ml-platform.highpeaks-ml.svc.cluster.local:80
+  - MLflow service:    mlflow-service.highpeaks-ml.svc.cluster.local:5000
+
+To access them from the host, run:
+  kubectl port-forward svc/highpeaks-ml-platform -n highpeaks-ml 5000:80 &
+  kubectl port-forward svc/mlflow-service -n highpeaks-ml 5001:5000 &
+EOF
+  fi
+}
+
 MODE="${1:-local}"
 case "$MODE" in
   local) local_deploy ;;
@@ -146,3 +173,4 @@ case "$MODE" in
 esac
 
 echo "🎉 Deployment finished"
+print_endpoints "$MODE"
