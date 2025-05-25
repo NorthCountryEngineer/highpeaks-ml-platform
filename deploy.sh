@@ -112,14 +112,18 @@ k8s_deploy() {
   unset TMPDIR
   
   echo "📥 Loading image into kind..."
-  echo "📥 Saving image to tarball…"
-  docker save highpeaks-ml-platform:latest -o highpeaks-ml-platform.tar
+  echo "🧹 Cleaning up old tarballs and Docker temp…"
+  rm -f /tmp/highpeaks-ml-platform.tar
+  rm -f /tmp/.docker_temp_*
+
+  echo "📥 Saving image to tarball (/tmp/highpeaks-ml-platform.tar)…"
+  docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
 
   echo "📥 Loading image into kind from tarball…"
-  kind load image-archive highpeaks-ml-platform.tar \
-    --name highpeaks-ml
-
-  rm highpeaks-ml-platform.tar
+  kind load image-archive /tmp/highpeaks-ml-platform.tar  --name highpeaks-ml
+  
+  echo "🧹 Removing temporary tar…"
+  rm /tmp/highpeaks-ml-platform.tar
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/namespace.yaml
