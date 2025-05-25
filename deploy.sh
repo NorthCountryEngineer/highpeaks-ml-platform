@@ -160,6 +160,7 @@ k8s_deploy() {
   echo "📂 Using temporary directory $TMPDIR"
   echo "📥 Saving image to tarball ($TMPDIR/highpeaks-ml-platform.tar)…"
   IMG_SIZE=$(docker image inspect highpeaks-ml-platform:latest --format='{{.Size}}')
+  
   ensure_space "$TMPDIR" "$IMG_SIZE" || { disk_usage_report; exit 1; }
   docker save highpeaks-ml-platform:latest -o "$TMPDIR/highpeaks-ml-platform.tar" || { disk_usage_report; exit 1; }
 
