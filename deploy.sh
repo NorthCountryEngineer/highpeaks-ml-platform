@@ -90,15 +90,31 @@ disk_usage_report() {
 }
 
 # Ensure the given path has at least the specified bytes free
+# Returns 0 if sufficient, 1 otherwise
 require_space() {
   local path="$1"
   local required="$2"
-  local avail=$(df --output=avail "$path" | tail -1)
+  local avail
+  avail=$(df --output=avail "$path" | tail -1)
   if (( avail * 1024 < required )); then
     echo "❌ Not enough space in $path (need $((required/1024/1024)) MiB, have $((avail/1024)) MiB)" >&2
-    disk_usage_report
-    exit 1
+    return 1
   fi
+  return 0
+}
+
+# Ensure space exists; attempt docker cleanup once if not enough
+ensure_space() {
+  local path="$1"
+  local required="$2"
+  if require_space "$path" "$required"; then
+    return 0
+  fi
+  if check_cmd docker; then
+    echo "🧹 Attempting to free space with 'docker system prune'..." >&2
+    docker system prune -af --volumes >/dev/null || true
+  fi
+  require_space "$path" "$required"
 }
 
 local_deploy() {
@@ -137,20 +153,22 @@ k8s_deploy() {
   
   echo "📥 Loading image into kind..."
   echo "🧹 Cleaning up old tarballs and Docker temp…"
-  rm -f /tmp/highpeaks-ml-platform.tar
-  rm -f /tmp/.docker_temp_*
+  TMPDIR="${DEPLOY_TMPDIR:-/tmp}"
+  rm -f "$TMPDIR/highpeaks-ml-platform.tar"
+  rm -f "$TMPDIR/.docker_temp_*" 2>/dev/null || true
 
-  echo "📥 Saving image to tarball (/tmp/highpeaks-ml-platform.tar)…"
+  echo "📂 Using temporary directory $TMPDIR"
+  echo "📥 Saving image to tarball ($TMPDIR/highpeaks-ml-platform.tar)…"
   IMG_SIZE=$(docker image inspect highpeaks-ml-platform:latest --format='{{.Size}}')
-  require_space /tmp "$IMG_SIZE"
-  require_space / "$IMG_SIZE"
-  docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar || { disk_usage_report; exit 1; }
+  
+  ensure_space "$TMPDIR" "$IMG_SIZE" || { disk_usage_report; exit 1; }
+  docker save highpeaks-ml-platform:latest -o "$TMPDIR/highpeaks-ml-platform.tar" || { disk_usage_report; exit 1; }
 
   echo "📥 Loading image into kind from tarball…"
-  kind load image-archive /tmp/highpeaks-ml-platform.tar  --name highpeaks-ml
-  
+  kind load image-archive "$TMPDIR/highpeaks-ml-platform.tar" --name highpeaks-ml
+
   echo "🧹 Removing temporary tar…"
-  rm /tmp/highpeaks-ml-platform.tar
+  rm "$TMPDIR/highpeaks-ml-platform.tar"
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/namespace.yaml
