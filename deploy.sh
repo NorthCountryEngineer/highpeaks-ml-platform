@@ -105,7 +105,7 @@ k8s_deploy() {
   fi
 
   echo "🔧 Ensuring kubectl is talking to kind-highpeaks-ml…"
-  kubectl config use-context kind-highpeaks-ml
+  kubectl config use-context highpeaks-ml
 
   # force Kind to use /tmp as its scratch space
   unset TMPDIR
