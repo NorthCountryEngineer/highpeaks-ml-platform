@@ -2,11 +2,21 @@
 set -euo pipefail
 
 # Minimal deployment script for High Peaks ML Platform
+
 # Usage: ./deploy.sh [local|k8s]
 
 local_deploy() {
   docker compose -f infrastructure/docker-compose.yml up -d
   echo "✅ Local deployment complete"
+}
+
+docker_cleanup() {
+  set -x
+  echo "pruning containers"
+  docker container prune -f
+  # https://stackoverflow.com/a/42371013/
+  docker system prune -f
+  set +x
 }
 
 k8s_deploy() {
