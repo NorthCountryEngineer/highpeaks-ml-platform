@@ -127,7 +127,28 @@ k8s_deploy() {
   kubectl apply -f infrastructure/k8s/deployment.yaml
   kubectl apply -f infrastructure/k8s/service.yaml
   kubectl apply -f infrastructure/k8s/mlflow.yaml
+  
   echo "✅ Kubernetes deployment complete"
+  echo
+  echo "🔍 Service Endpoints (cluster-internal IPs):"
+  echo
+  echo " • ML Platform API:"
+  echo "     \$ kubectl get svc highpeaks-ml-platform -n highpeaks-ml"
+  echo "     ➜ ClusterIP:$(kubectl get svc highpeaks-ml-platform -n highpeaks-ml -o jsonpath='{.spec.clusterIP}') Port:80"
+  echo
+  echo " • MLflow tracking UI:"
+  echo "     \$ kubectl get svc mlflow-service      -n highpeaks-ml"
+  echo "     ➜ ClusterIP:$(kubectl get svc mlflow-service      -n highpeaks-ml -o jsonpath='{.spec.clusterIP}') Port:5000"
+  echo
+  echo " • MinIO Console/API:"
+  echo "     \$ kubectl get svc minio               -n highpeaks-ml"
+  echo "     ➜ Console/API IP:$(kubectl get svc minio           -n highpeaks-ml -o jsonpath='{.spec.clusterIP}') Ports:9001/9000"
+  echo
+  echo "👉 To connect from your laptop, port-forward each service in a separate shell:"
+  echo "     kubectl port-forward svc/highpeaks-ml-platform  -n highpeaks-ml 5000:80   # then curl http://localhost:5000/predict"
+  echo "     kubectl port-forward svc/mlflow-service       -n highpeaks-ml 5001:5000 # then browse http://localhost:5001"
+  echo "     kubectl port-forward svc/minio                -n highpeaks-ml 9001:9001 # then browse http://localhost:9001 (user/minioadmin)"
+  echo
 }
 
 
