@@ -10,14 +10,14 @@ local_deploy() {
   echo "✅ Local deployment complete"
 }
 
-docker_cleanup() {
-  set -x
-  echo "pruning containers"
-  docker container prune -f
-  # https://stackoverflow.com/a/42371013/
-  docker system prune -f
-  set +x
-}
+k8s_deploy() {
+  TMPDIR=$(mktemp -d)
+  export TMPDIR
+  trap "rm -rf $TMPDIR" EXIT
+
+  install_docker
+  install_kubectl
+  install_kind
 
 k8s_deploy() {
   tmpdir=$(mktemp -d)
@@ -31,9 +31,21 @@ k8s_deploy() {
 
   echo "📥 Loading image into kind..."
   if ! kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml; then
-    echo "⚠️ kind load failed, using docker save fallback" >&2
-    docker save highpeaks-ml-platform:latest -o "$TMPDIR/images.tar"
-    kind load image-archive "$TMPDIR/images.tar" --name highpeaks-ml
+    echo "⚠️ kind load failed, attempting docker save fallback..." >&2
+    # kind may have cleaned up $TMPDIR on failure, recreate if needed
+    if [[ ! -d "$TMPDIR" ]]; then
+      TMPDIR=$(mktemp -d)
+      export TMPDIR
+    fi
+    if docker save highpeaks-ml-platform:latest -o "$TMPDIR/images.tar" && \
+       kind load image-archive "$TMPDIR/images.tar" --name highpeaks-ml; then
+      echo "✔️ Image loaded via docker save fallback"
+    else
+      echo "❌ Failed to load Docker image into kind" >&2
+      disk_usage_report
+      exit 1
+    fi
+
   fi
 
   kubectl apply -f infrastructure/k8s/namespace.yaml
