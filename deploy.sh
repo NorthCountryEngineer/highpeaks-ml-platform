@@ -106,7 +106,7 @@ k8s_deploy() {
 
   echo "📥 Saving image to tarball and loading into kind..."
   IMAGE_TAR="/tmp/highpeaks-ml-platform.tar"
-  docker save highpeaks-ml-platform:latest -o "$IMAGE_TAR"
+  docker save -o "$IMAGE_TAR" highpeaks-ml-platform:latest
   kind load image-archive "$IMAGE_TAR" --name highpeaks-ml
   rm -f "$IMAGE_TAR"
 
