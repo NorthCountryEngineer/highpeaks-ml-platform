@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Force all Docker/Kind temp files into /tmp
+export TMPDIR=/tmp
+
 # High Peaks ML Platform deployment script
 # Usage: ./deploy.sh [local|k8s]
 # If no argument is provided, prompts for deployment type.
@@ -144,21 +147,15 @@ k8s_deploy() {
       --config infrastructure/k8s/kind-cluster.yaml
   fi
 
-  # ensure kubeconfig is set for the current user
   echo "🔧 Exporting kubeconfig..."
   kind export kubeconfig --name highpeaks-ml
 
-  # force Kind to use /tmp as its scratch space
-  unset TMPDIR
-  
-  echo "📥 Loading image into kind..."
-  echo "📥 Saving image to local tarball…"
-  docker save highpeaks-ml-platform:latest -o highpeaks-ml-platform.tar
-  
-  echo "📥 Loading image into kind from tarball…"
-  kind load image-archive highpeaks-ml-platform.tar --name highpeaks-ml
-  
-  rm -f highpeaks-ml-platform.tar
+  echo "📥 Saving image to tarball in /tmp…"
+  docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
+
+  echo "📥 Loading image into kind from /tmp…"
+  kind load image-archive /tmp/highpeaks-ml-platform.tar --name highpeaks-ml
+  rm -f /tmp/highpeaks-ml-platform.tar
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/namespace.yaml
