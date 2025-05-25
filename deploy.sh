@@ -128,10 +128,6 @@ local_deploy() {
 }
 
 k8s_deploy() {
-  TMPDIR=$(mktemp -d)
-  export TMPDIR
-  trap "rm -rf $TMPDIR" EXIT
-
   install_docker
   install_kubectl
   install_kind
@@ -152,18 +148,27 @@ k8s_deploy() {
   echo "🔧 Exporting kubeconfig..."
   kind export kubeconfig --name highpeaks-ml
 
+  # force Kind to use /tmp as its scratch space
+  unset TMPDIR
+  
   echo "📥 Loading image into kind..."
-  if ! kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml; then
-    echo "⚠️ kind load failed, attempting docker save fallback..." >&2
-    if docker save highpeaks-ml-platform:latest -o "$TMPDIR/images.tar" && \
-       kind load image-archive "$TMPDIR/images.tar" --name highpeaks-ml; then
-      echo "✔️ Image loaded via docker save fallback"
-    else
-      echo "❌ Failed to load Docker image into kind" >&2
-      disk_usage_report
-      exit 1
-    fi
-  fi
+  echo "🧹 Cleaning up old tarballs and Docker temp…"
+  TMPDIR="${DEPLOY_TMPDIR:-/tmp}"
+  rm -f "$TMPDIR/highpeaks-ml-platform.tar"
+  rm -f "$TMPDIR/.docker_temp_*" 2>/dev/null || true
+
+  echo "📂 Using temporary directory $TMPDIR"
+  echo "📥 Saving image to tarball ($TMPDIR/highpeaks-ml-platform.tar)…"
+  IMG_SIZE=$(docker image inspect highpeaks-ml-platform:latest --format='{{.Size}}')
+  
+  ensure_space "$TMPDIR" "$IMG_SIZE" || { disk_usage_report; exit 1; }
+  docker save highpeaks-ml-platform:latest -o "$TMPDIR/highpeaks-ml-platform.tar" || { disk_usage_report; exit 1; }
+
+  echo "📥 Loading image into kind from tarball…"
+  kind load image-archive "$TMPDIR/highpeaks-ml-platform.tar" --name highpeaks-ml
+
+  echo "🧹 Removing temporary tar…"
+  rm "$TMPDIR/highpeaks-ml-platform.tar"
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/namespace.yaml
