@@ -154,10 +154,11 @@ k8s_deploy() {
   unset TMPDIR
 
   # trying to clear "no space left on device" error
-  echo "🧹 Cleaning up old tarballs and Docker temp…"
+  echo "🧹 Cleaning up old temp folders and pruning volumes"
   TMPDIR="${DEPLOY_TMPDIR:-/tmp}"
   rm -f "$TMPDIR/highpeaks-ml-platform.tar"
   rm -f "$TMPDIR/.docker_temp_*" 2>/dev/null || true
+  docker system prune --volumes
 
   echo "📥 Saving image to tarball in /tmp…"
   docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
