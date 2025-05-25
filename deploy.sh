@@ -166,12 +166,8 @@ k8s_deploy() {
   echo "🧹 Running Docker cleanup tasks"
   docker_cleanup
 
-  echo "📥 Saving image to tarball in /tmp…"
-  docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
-
-  echo "📥 Loading image into kind from /tmp…"
-  kind load image-archive /tmp/highpeaks-ml-platform.tar --name highpeaks-ml
-  rm -f /tmp/highpeaks-ml-platform.tar
+  echo "📥 Loading image"
+  kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/namespace.yaml
