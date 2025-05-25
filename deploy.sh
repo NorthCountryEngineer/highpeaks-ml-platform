@@ -122,7 +122,11 @@ k8s_deploy() {
   rm highpeaks-ml-platform.tar
 
   echo "📑 Applying Kubernetes manifests..."
-  kubectl apply -f infrastructure/k8s/
+  kubectl apply -f infrastructure/k8s/namespace.yaml
+  kubectl apply -f infrastructure/k8s/storage.yaml
+  kubectl apply -f infrastructure/k8s/deployment.yaml
+  kubectl apply -f infrastructure/k8s/service.yaml
+  kubectl apply -f infrastructure/k8s/mlflow.yaml
   echo "✅ Kubernetes deployment complete"
 }
 
