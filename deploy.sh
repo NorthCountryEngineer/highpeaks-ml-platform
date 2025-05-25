@@ -10,6 +10,76 @@ local_deploy() {
   echo "✅ Local deployment complete"
 }
 
+install_docker() {
+  if check_cmd docker; then
+    echo "✔️ Docker already installed"
+  else
+    echo "🛠️ Installing Docker..."
+    sudo apt-get update
+    sudo apt-get install -y docker.io docker-compose-plugin
+    echo "✔️ Docker installed"
+  fi
+
+  # ensure 'docker' group exists
+  if ! getent group docker >/dev/null; then
+    echo "👥 Creating 'docker' group..."
+    sudo groupadd docker
+  fi
+
+  # pick the non-root user that invoked this script
+  TARGET_USER="${SUDO_USER:-$USER}"
+  if [[ "$TARGET_USER" == "root" ]]; then
+    echo "⚠️  Running as root; skipping 'docker' group membership (not needed for root)."
+  else
+    if id -nG "$TARGET_USER" | grep -qw docker; then
+      echo "✔️ $TARGET_USER is already in the 'docker' group"
+    else
+      echo "🔐 Adding $TARGET_USER to 'docker' group (you may need to log out & back in)..."
+      sudo usermod -aG docker "$TARGET_USER"
+    fi
+  fi
+}
+
+install_kubectl() {
+  if check_cmd kubectl; then
+    echo "✔️ kubectl already installed"
+    return
+  fi
+  echo "🛠️ Installing kubectl..."
+  sudo apt-get update
+  sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
+
+  # fetch Google APT signing key into the recommended location
+  sudo mkdir -p /usr/share/keyrings
+
+  curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+  # add the official k8s repo
+  echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" \
+    | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+  # update & install
+  sudo apt-get update
+  sudo apt-get install -y kubectl
+
+  echo "✔️ kubectl installed: $(kubectl version --client --short)"
+}
+
+
+install_kind() {
+  if check_cmd kind; then
+    echo "✔️ kind already installed"
+    return
+  fi
+  echo "🛠️ Installing kind..."
+  KIND_VER=v0.24.0
+  curl -fsSL "https://kind.sigs.k8s.io/dl/${KIND_VER}/kind-linux-amd64" -o ./kind
+  chmod +x ./kind
+  sudo mv ./kind /usr/local/bin/kind
+  echo "✔️ kind installed: $(kind version)"
+}
+
 # Print disk usage information for operators
 disk_usage_report() {
   echo "📊 Disk usage summary:" >&2
