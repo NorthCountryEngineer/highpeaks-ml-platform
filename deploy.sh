@@ -150,6 +150,15 @@ k8s_deploy() {
   echo "🔧 Exporting kubeconfig..."
   kind export kubeconfig --name highpeaks-ml
 
+  # force Kind to use /tmp as its scratch space
+  unset TMPDIR
+
+  # trying to clear "no space left on device" error
+  echo "🧹 Cleaning up old tarballs and Docker temp…"
+  TMPDIR="${DEPLOY_TMPDIR:-/tmp}"
+  rm -f "$TMPDIR/highpeaks-ml-platform.tar"
+  rm -f "$TMPDIR/.docker_temp_*" 2>/dev/null || true
+
   echo "📥 Saving image to tarball in /tmp…"
   docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
 
