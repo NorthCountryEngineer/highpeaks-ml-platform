@@ -117,6 +117,12 @@ k8s_deploy() {
   rm -f /tmp/.docker_temp_*
 
   echo "📥 Saving image to tarball (/tmp/highpeaks-ml-platform.tar)…"
+  IMG_SIZE=$(docker image inspect highpeaks-ml-platform:latest --format='{{.Size}}')
+  AVAIL=$(df --output=avail /tmp | tail -1)
+  if (( AVAIL*1024 < IMG_SIZE )); then
+    echo "❌ Not enough space in /tmp (need $((IMG_SIZE/1024/1024)) MiB, have $((AVAIL/1024)) MiB)" >&2
+    exit 1
+  fi
   docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
 
   echo "📥 Loading image into kind from tarball…"
