@@ -79,10 +79,33 @@ install_kind() {
   echo "✔️ kind installed: $(kind version)"
 }
 
+# Print disk usage information for operators
+disk_usage_report() {
+  echo "📊 Disk usage summary:" >&2
+  df -h / /tmp | awk 'NR==1 || /\/$|\/tmp/' >&2
+  if check_cmd docker; then
+    echo "📊 Docker system disk usage:" >&2
+    docker system df -v >&2 || true
+  fi
+}
+
+# Ensure the given path has at least the specified bytes free
+require_space() {
+  local path="$1"
+  local required="$2"
+  local avail=$(df --output=avail "$path" | tail -1)
+  if (( avail * 1024 < required )); then
+    echo "❌ Not enough space in $path (need $((required/1024/1024)) MiB, have $((avail/1024)) MiB)" >&2
+    disk_usage_report
+    exit 1
+  fi
+}
+
 local_deploy() {
   install_docker
   echo "🐳 Building Docker image..."
   docker build -t highpeaks-ml-platform:latest .
+  disk_usage_report
   echo "📦 Starting local stack via Docker Compose..."
   docker compose -f infrastructure/docker-compose.yml up -d
   echo "✅ Local docker-compose deployment complete"
@@ -96,6 +119,7 @@ k8s_deploy() {
   echo "🐳 Building Docker image..."
   docker build -t highpeaks-ml-platform:latest .
 
+  disk_usage_report
   echo "🔄 Creating (or reusing) kind cluster..."
   if kind get clusters | grep -q highpeaks-ml; then
     echo "✔️ kind cluster 'highpeaks-ml' already exists"
@@ -118,12 +142,9 @@ k8s_deploy() {
 
   echo "📥 Saving image to tarball (/tmp/highpeaks-ml-platform.tar)…"
   IMG_SIZE=$(docker image inspect highpeaks-ml-platform:latest --format='{{.Size}}')
-  AVAIL=$(df --output=avail /tmp | tail -1)
-  if (( AVAIL*1024 < IMG_SIZE )); then
-    echo "❌ Not enough space in /tmp (need $((IMG_SIZE/1024/1024)) MiB, have $((AVAIL/1024)) MiB)" >&2
-    exit 1
-  fi
-  docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar
+  require_space /tmp "$IMG_SIZE"
+  require_space / "$IMG_SIZE"
+  docker save highpeaks-ml-platform:latest -o /tmp/highpeaks-ml-platform.tar || { disk_usage_report; exit 1; }
 
   echo "📥 Loading image into kind from tarball…"
   kind load image-archive /tmp/highpeaks-ml-platform.tar  --name highpeaks-ml
