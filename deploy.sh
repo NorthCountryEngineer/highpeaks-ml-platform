@@ -152,11 +152,13 @@ k8s_deploy() {
   unset TMPDIR
   
   echo "📥 Loading image into kind..."
-  if ! kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml; then
-    echo "❌ Failed to load Docker image into kind" >&2
-    disk_usage_report
-    exit 1
-  fi
+  echo "📥 Saving image to local tarball…"
+  docker save highpeaks-ml-platform:latest -o highpeaks-ml-platform.tar
+  
+  echo "📥 Loading image into kind from tarball…"
+  kind load image-archive highpeaks-ml-platform.tar --name highpeaks-ml
+  
+  rm -f highpeaks-ml-platform.tar
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/namespace.yaml
