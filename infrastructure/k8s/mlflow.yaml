@@ -18,7 +18,16 @@ spec:
       containers:
         - name: mlflow
           image: ghcr.io/mlflow/mlflow:latest
-          command: ["mlflow", "server"]
+          command:
+            - sh
+            - -c
+            - |
+              pip install --no-cache-dir psycopg2-binary && \
+              exec mlflow server \
+                --backend-store-uri postgresql://mluser:mlpassword@postgres.highpeaks-ml.svc.cluster.local:5432/mlplatformdb \
+                --default-artifact-root s3://ml-platform \
+                --host 0.0.0.0 \
+                --port 5000
           args:
             - "--backend-store-uri"
             - "postgresql://mluser:mlpassword@postgres.highpeaks-ml.svc.cluster.local:5432/mlplatformdb"
