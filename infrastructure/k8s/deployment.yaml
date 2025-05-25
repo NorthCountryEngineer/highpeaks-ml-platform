@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: highpeaks-ml-platform
+  namespace: highpeaks-ml
   labels:
     app: highpeaks-ml
 spec:
