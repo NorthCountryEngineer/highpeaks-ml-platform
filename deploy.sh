@@ -104,6 +104,9 @@ k8s_deploy() {
       --config infrastructure/k8s/kind-cluster.yaml
   fi
 
+  # force Kind to use /tmp as its scratch space
+  unset TMPDIR
+  
   echo "📥 Loading image into kind..."
   kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml
 
