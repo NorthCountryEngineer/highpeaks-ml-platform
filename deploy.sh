@@ -104,11 +104,8 @@ k8s_deploy() {
       --config infrastructure/k8s/kind-cluster.yaml
   fi
 
-  echo "📥 Saving image to tarball and loading into kind..."
-  IMAGE_TAR="/tmp/highpeaks-ml-platform.tar"
-  docker save -o "$IMAGE_TAR" highpeaks-ml-platform:latest
-  kind load image-archive "$IMAGE_TAR" --name highpeaks-ml
-  rm -f "$IMAGE_TAR"
+  echo "📥 Loading image into kind..."
+  kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml
 
   echo "📑 Applying Kubernetes manifests..."
   kubectl apply -f infrastructure/k8s/
