@@ -21,13 +21,12 @@ services:
 
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
-    # ← add this block:
     command: >
-      mlflow server
-      --backend-store-uri postgresql://mluser:mlpassword@postgres/mlplatformdb
-      --default-artifact-root s3://ml-platform
-      --host 0.0.0.0
-      --port 5000
+      sh -c "pip install --no-cache-dir psycopg2-binary && \
+      mlflow server \
+        --backend-store-uri postgresql://mluser:mlpassword@postgres/mlplatformdb \
+        --default-artifact-root s3://ml-platform \
+        --host 0.0.0.0 --port 5000"
     environment:
       AWS_ACCESS_KEY_ID: minioadmin
       AWS_SECRET_ACCESS_KEY: minioadmin
