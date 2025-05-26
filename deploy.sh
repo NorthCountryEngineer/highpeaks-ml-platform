@@ -72,17 +72,16 @@ install_kubectl() {
 }
 
 
-install_kind() {
-  if check_cmd kind; then
-    echo "✔️ kind already installed"
+install_minikube() {
+  if check_cmd minikube; then
+    echo "✔️ minikube already installed"
     return
   fi
-  echo "🛠️ Installing kind..."
-  KIND_VER=v0.24.0
-  curl -fsSL "https://kind.sigs.k8s.io/dl/${KIND_VER}/kind-linux-amd64" -o ./kind
-  chmod +x ./kind
-  sudo mv ./kind /usr/local/bin/kind
-  echo "✔️ kind installed: $(kind version)"
+  echo "🛠️ Installing minikube..."
+  curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+  chmod +x minikube
+  sudo mv minikube /usr/local/bin/minikube
+  echo "✔️ minikube installed: $(minikube version --short)"
 }
 
 # Print disk usage information for operators
@@ -102,33 +101,21 @@ k8s_deploy() {
 
   install_docker
   install_kubectl
-  install_kind
+  install_minikube
 
-  kind create cluster --name highpeaks-ml \
-    --config infrastructure/k8s/kind-cluster.yaml 2>/dev/null || true
+  minikube start --driver=docker || true
 
   echo "🐳 Building Docker image..."
   docker build -t highpeaks-ml-platform:latest .
   
-  echo "🔄 Creating (or reusing) kind cluster..."
-  if kind get clusters | grep -q highpeaks-ml; then
-    echo "✔️ kind cluster 'highpeaks-ml' already exists"
-  else
-    kind create cluster --name highpeaks-ml \
-      --config infrastructure/k8s/kind-cluster.yaml
-  fi
-  
-  echo "📥 Loading image into kind..."
-    if ! kind load docker-image highpeaks-ml-platform:latest --name highpeaks-ml; then
-      echo "⚠️ kind load failed, attempting docker save fallback..." >&2
-      if docker save highpeaks-ml-platform:latest -o "$TMPDIR/images.tar" && \
-         kind load image-archive "$TMPDIR/images.tar" --name highpeaks-ml; then
-        echo "✔️ Image loaded via docker save fallback"
-      else
-        echo "❌ Failed to load Docker image into kind" >&2
-        disk_usage_report
-        exit 1
-    fi
+  echo "🔄 Creating (or reusing) minikube cluster..."
+  minikube status >/dev/null 2>&1 || minikube start --driver=docker
+
+  echo "📥 Loading image into minikube..."
+  if ! minikube image load highpeaks-ml-platform:latest; then
+    echo "❌ Failed to load Docker image into minikube" >&2
+    disk_usage_report
+    exit 1
   fi
 
   kubectl apply -f infrastructure/k8s/namespace.yaml
