@@ -59,7 +59,7 @@ be provided via environment variables or a secrets manager rather than in the
 file.
 ## Development Setup
 
-**Prerequisites:** Python 3.x (3.10 recommended), pip, Docker, Docker Compose, Kubernetes (`kubectl`, optionally `kind`).
+**Prerequisites:** Python 3.x (3.10 recommended), pip, Docker, Docker Compose, Kubernetes (`kubectl`, optionally `minikube`).
 
 1. **Setup a virtual environment (optional but recommended):**
     ```bash
@@ -117,13 +117,13 @@ Stop the stack using:
 
 ## Quick Deployment Script
 
-The simplified `deploy.sh` script spins up the ML platform either locally with Docker Compose or on a Kind Kubernetes cluster. Docker (and for `k8s` mode also `kubectl` and `kind`) must already be installed.
+The simplified `deploy.sh` script spins up the ML platform either locally with Docker Compose or on a Minikube Kubernetes cluster. Docker (and for `k8s` mode also `kubectl` and `minikube`) must already be installed.
 
 Run one of the following commands:
 
 ```bash
 ./deploy.sh local  # start Docker Compose stack
-./deploy.sh k8s    # create Kind cluster and apply manifests
+./deploy.sh k8s    # start Minikube cluster and apply manifests
 ```
 ## Data Pipeline
 
@@ -146,9 +146,9 @@ Kubernetes manifests located in `infrastructure/k8s/`:
 
 ### Deploy Steps:
 
-1. **Ensure Docker image is built and loaded (if using Kind):**
+1. **Ensure Docker image is built and loaded (if using Minikube):**
     ```bash
-    kind load docker-image highpeaks-ml-platform:latest
+    minikube image load highpeaks-ml-platform:latest
     ```
 
 2. **Apply Kubernetes manifests:**
