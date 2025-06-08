@@ -7,8 +7,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY app.py .
+# Copy application code and resources
+COPY . .
 
 # Expose the port and specify the entrypoint
 EXPOSE 5000
